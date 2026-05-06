@@ -95,7 +95,6 @@ with st.expander("Informacion Legal del Cliente", expanded=True):
     rfc_cliente = c_c1.text_input("RFC", "MAL221117ANO")
     representante = c_c2.text_input("Representante Legal", "Nombre del Representante")
     
-    # NUEVO: Area de texto multilinea para descripciones detalladas
     descripcion_default = "19x Smart Store 600 Duo Mexico\n19x PAX IM30 Kit\n19x Complete Roller Set para Smart Store"
     equipo_desc = st.text_area("Descripcion detallada del Activo", descripcion_default, height=100)
 
@@ -137,7 +136,26 @@ st.markdown("**Al termino del contrato:**")
 st.dataframe(df_termino, use_container_width=True, hide_index=True)
 
 with st.expander("Vista Analitica Interna (Exclusivo FEX Capital)"):
-    st.info(f"Monto a Financiar (Base sin IVA): {moneda} ${vals['precio_base']:,.2f}")
+    
+    # --- CÁLCULO DEL IRR (TIR) ---
+    # Momento 0: Salida del equipo + Ingreso Renta 1 + Ingreso Comision + Ingreso Garantia
+    flujos_efectivo = [-vals['precio_base'] + vals['renta_neta'] + vals['comision_neta'] + vals['renta_neta']]
+    
+    # Momento 1 hasta Plazo-2: Rentas mensuales ordinarias
+    for _ in range(meses - 2):
+        flujos_efectivo.append(vals['renta_neta'])
+        
+    # Momento Final: Cobro del valor residual (La renta ya esta cubierta)
+    flujos_efectivo.append(vals['residual_neto'])
+    
+    # Calculo y Anualizacion
+    tir_mensual = npf.irr(flujos_efectivo)
+    tir_anual = tir_mensual * 12 * 100
+    # -----------------------------
+    
+    col1, col2 = st.columns(2)
+    col1.info(f"Monto a Financiar (Base sin IVA): {moneda} ${vals['precio_base']:,.2f}")
+    col2.success(f"TIR Anualizada (IRR) de la Operacion: {tir_anual:.2f}%")
     
     datos_internos = []
     saldo_insoluto = vals['precio_base']
@@ -169,7 +187,6 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.cell(95, 7, f"Cliente: {nombre_empresa}", 0, 0)
     pdf.cell(95, 7, f"RFC: {rfc_cliente}", 0, 1)
     
-    # NUEVO: Multicell para soportar descripciones de multiples lineas
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(15, 7, "Activo:", 0, 0)
     pdf.set_font("Arial", '', 10)
