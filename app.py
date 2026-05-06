@@ -52,12 +52,13 @@ def calcular_escenario(precio_con_iva, tasa_anual, meses, residual_porc, comisio
 # 4. Interfaz Lateral
 if os.path.exists(LOGO_PATH):
     st.sidebar.image(LOGO_PATH, use_container_width=True)
+    # Slogan movido a la barra lateral debajo del logo
+    st.sidebar.markdown("<p style='text-align: center; font-weight: bold; color: #1B1B1B; margin-top: -10px;'>TU ALIADO FINANCIERO</p>", unsafe_allow_html=True)
     st.sidebar.markdown("---")
     
 st.sidebar.markdown("### Configuración de Parámetros")
 moneda = st.sidebar.selectbox("Moneda", ["MXN", "USD"])
 
-# Actualización a formato de moneda con decimales (.00)
 precio_input = st.sidebar.number_input("Precio del Equipo (IVA incluido)", min_value=1000.0, value=1160000.0, step=10000.0, format="%.2f")
 
 tasa = st.sidebar.slider("Tasa Anualizada (%)", 1.0, 100.0, 14.5, 0.5)
@@ -66,8 +67,8 @@ residual = st.sidebar.slider("Valor Residual (%)", 0, 40, 10, 1)
 comision = st.sidebar.number_input("Comisión por Apertura (%)", min_value=0.0, value=3.0, step=0.5, format="%.2f")
 
 # 5. Captura Datos
-st.title("FEX CAPITAL")
-st.markdown("#### TU ALIADO FINANCIERO")
+# Nuevo título principal que reemplaza a "FEX CAPITAL"
+st.title("Calculadora de Arrendamiento")
 st.markdown("---")
 
 with st.expander("Información Legal del Cliente", expanded=True):
