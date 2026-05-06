@@ -134,7 +134,8 @@ for mes in range(1, meses + 1):
         "Renta Base": f"{moneda} ${r_neta:,.2f}",
         "IVA": f"{moneda} ${i_renta:,.2f}",
         "Pago Total": f"{moneda} ${p_mes:,.2f}",
-        "Concepto": "Primera Renta Anticipada + Comisión" if mes == 1 else "Renta Mensual"
+        # TEXTO REDUCIDO PARA QUE QUEPA PERFECTAMENTE EN EL PDF
+        "Concepto": "1ra Renta Anticipada + Comisión" if mes == 1 else "Renta Mensual"
     })
     
     datos_internos.append({
@@ -163,6 +164,7 @@ with st.expander("Vista Analítica Interna (Exclusivo FEX Capital)"):
 st.markdown("---")
 if st.button("Generar y Descargar Term Sheet PDF"):
     pdf = TermSheetPDF()
+    pdf.set_auto_page_break(auto=False) # Desactivamos el automático para controlarlo nosotros
     pdf.add_page()
     pdf.set_text_color(27, 27, 27)
     
@@ -182,24 +184,42 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.ln(15); pdf.set_font("Arial", 'B', 10)
     pdf.cell(90, 10, "__________________________________", 0, 0, 'C'); pdf.cell(90, 10, "__________________________________", 0, 1, 'C')
     pdf.cell(90, 5, f"Por: {nombre_empresa}", 0, 0, 'C')
-    
     pdf.cell(90, 5, "Por: FEX CAPITAL, S.A. DE C.V.", 0, 1, 'C')
     
+    # -----------------------------------------------------
+    # PAGINA 2 Y TABLA CONTROLADA
+    # -----------------------------------------------------
     pdf.add_page()
     pdf.set_font("Arial", 'B', 12); pdf.cell(0, 10, "ANEXO A: PROYECCION DE FLUJOS", ln=True, border='B'); pdf.ln(5)
     
-    pdf.set_fill_color(1, 99, 255)
-    pdf.set_text_color(255, 255, 255)
-    pdf.set_font("Arial", 'B', 8)
-    for c in ["Mes", "Renta Base", "IVA", "Pago Total", "Concepto"]: pdf.cell(38 if c != "Mes" else 15, 7, c, 1, 0, 'C', fill=True)
-    pdf.ln()
+    # Función para imprimir los encabezados de la tabla
+    def imprimir_encabezados_tabla(pdf_obj):
+        pdf_obj.set_fill_color(1, 99, 255)
+        pdf_obj.set_text_color(255, 255, 255)
+        pdf_obj.set_font("Arial", 'B', 8)
+        # Anchos ajustados: 15 + 40 + 35 + 40 + 60 = 190 (Ajuste perfecto para página A4)
+        pdf_obj.cell(15, 7, "Mes", 1, 0, 'C', fill=True)
+        pdf_obj.cell(40, 7, "Renta Base", 1, 0, 'C', fill=True)
+        pdf_obj.cell(35, 7, "IVA", 1, 0, 'C', fill=True)
+        pdf_obj.cell(40, 7, "Pago Total", 1, 0, 'C', fill=True)
+        pdf_obj.cell(60, 7, "Concepto", 1, 1, 'C', fill=True)
+        # Regresar a formato de texto normal
+        pdf_obj.set_text_color(27, 27, 27)
+        pdf_obj.set_font("Arial", '', 8)
+
+    imprimir_encabezados_tabla(pdf)
     
-    pdf.set_text_color(27, 27, 27)
-    pdf.set_font("Arial", '', 8)
     for _, row in df_comercial.iterrows():
+        # Sensor Anti-Recortes: Si la posición en Y pasa de 265, agregamos una página nueva
+        if pdf.get_y() > 265:
+            pdf.add_page()
+            imprimir_encabezados_tabla(pdf) # Volvemos a imprimir los títulos azules en la nueva hoja
+            
         pdf.cell(15, 6, str(row['Mes']), 1, 0, 'C')
-        pdf.cell(38, 6, row['Renta Base'], 1, 0, 'R'); pdf.cell(38, 6, row['IVA'], 1, 0, 'R'); pdf.cell(38, 6, row['Pago Total'], 1, 0, 'R')
-        pdf.cell(38, 6, row['Concepto'], 1, 1, 'L')
+        pdf.cell(40, 6, row['Renta Base'], 1, 0, 'R')
+        pdf.cell(35, 6, row['IVA'], 1, 0, 'R')
+        pdf.cell(40, 6, row['Pago Total'], 1, 0, 'R')
+        pdf.cell(60, 6, row['Concepto'], 1, 1, 'L')
     
     pdf_output = pdf.output(dest='S').encode('latin-1')
     b64_pdf = base64.b64encode(pdf_output).decode('utf-8')
