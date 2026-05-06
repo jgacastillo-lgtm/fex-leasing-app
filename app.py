@@ -35,28 +35,29 @@ m_style = """
 """
 st.markdown(m_style, unsafe_allow_html=True)
 
-# 2. Clase para PDF (Con Logo Centrado y Fecha)
+# 2. Clase para PDF (Con Logo Aislado y Textos Reducidos)
 class TermSheetPDF(FPDF):
     def header(self):
-        # Insertar logo centrado (Ancho hoja 210mm - Ancho logo 50 = 160 / 2 = Posición X 80)
+        # Insertar logo centrado hasta arriba
         if os.path.exists(LOGO_PATH):
-            self.image(LOGO_PATH, x=80, y=8, w=50)
+            self.image(LOGO_PATH, x=80, y=10, w=50)
             
-        # Bajar el texto para que no se encime con el logo
-        self.set_y(28)
+        # Bajar el texto considerablemente para aislar el logo
+        self.set_y(38)
         
-        # Título
-        self.set_font('Arial', 'B', 15)
+        # Título principal con tamaño reducido
+        self.set_font('Arial', 'B', 12)
         self.set_text_color(27, 27, 27) # Negro corporativo FEX
-        self.cell(0, 10, 'TERM SHEET PRELIMINAR', 0, 1, 'C')
+        self.cell(0, 6, 'TERM SHEET PRELIMINAR', 0, 1, 'C')
         
-        # Fecha en formato DD/MM/YYYY
+        # Fecha con tamaño reducido
         fecha_hoy = datetime.now().strftime("%d/%m/%Y")
-        self.set_font('Arial', '', 10)
+        self.set_font('Arial', '', 9)
         self.set_text_color(100, 100, 100)
         self.cell(0, 5, f'Fecha: {fecha_hoy}', 0, 1, 'C')
         
-        self.ln(8)
+        # Espacio antes de empezar las secciones de datos
+        self.ln(10)
         
     def footer(self):
         self.set_y(-15)
@@ -181,6 +182,7 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.ln(15); pdf.set_font("Arial", 'B', 10)
     pdf.cell(90, 10, "__________________________________", 0, 0, 'C'); pdf.cell(90, 10, "__________________________________", 0, 1, 'C')
     pdf.cell(90, 5, f"Por: {nombre_empresa}", 0, 0, 'C')
+    
     pdf.cell(90, 5, "Por: FEX CAPITAL, S.A. DE C.V.", 0, 1, 'C')
     
     pdf.add_page()
