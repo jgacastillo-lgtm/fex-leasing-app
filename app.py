@@ -8,6 +8,9 @@ import os
 # 1. Configuración y Estilos
 st.set_page_config(page_title="FEX Capital - Sistema de Arrendamiento", layout="wide")
 
+# Validamos el nombre exacto de tu archivo de logo
+LOGO_PATH = "LOGO FEX.png"
+
 m_style = """
 <style>
     div.stButton > button:first-child {
@@ -35,15 +38,14 @@ st.markdown(m_style, unsafe_allow_html=True)
 # 2. Clase para PDF (Con Logo y Nueva Razón Social)
 class TermSheetPDF(FPDF):
     def header(self):
-        # Insertar logo si existe en el repositorio (x, y, ancho)
-        if os.path.exists("logo.png"):
-            self.image("logo.png", 10, 8, 40)
+        # Insertar logo si existe en el repositorio con el nombre exacto
+        if os.path.exists(LOGO_PATH):
+            self.image(LOGO_PATH, 10, 8, 40)
             
         self.set_font('Arial', 'B', 15)
         self.cell(0, 10, 'TERM SHEET PRELIMINAR', 0, 1, 'C')
         self.set_font('Arial', 'B', 11)
         self.set_text_color(1, 99, 255)
-        # Nueva Razón Social
         self.cell(0, 10, 'FEX CAPITAL, S.A. DE C.V.', 0, 1, 'C')
         self.ln(10)
         
@@ -69,8 +71,8 @@ def calcular_escenario(precio_con_iva, tasa_anual, meses, residual_porc, comisio
     return precio_base, renta_neta, iva_renta, renta_total, monto_comision, pago_inicial, monto_residual, tasa_mensual
 
 # 4. Interfaz Lateral (Con Logo)
-if os.path.exists("logo.png"):
-    st.sidebar.image("logo.png", use_column_width=True)
+if os.path.exists(LOGO_PATH):
+    st.sidebar.image(LOGO_PATH, use_container_width=True)
     st.sidebar.markdown("---")
     
 st.sidebar.markdown("### Configuración de Parámetros")
@@ -171,7 +173,6 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.cell(90, 10, "__________________________________", 0, 0, 'C'); pdf.cell(90, 10, "__________________________________", 0, 1, 'C')
     pdf.cell(90, 5, f"Por: {nombre_empresa}", 0, 0, 'C')
     
-    # Firma con la Nueva Razón Social
     pdf.cell(90, 5, "Por: FEX CAPITAL, S.A. DE C.V.", 0, 1, 'C')
     
     pdf.add_page()
