@@ -120,7 +120,7 @@ df_mensualidades = pd.DataFrame({
 })
 
 df_termino = pd.DataFrame({
-    "Concepto": ["Valor Residual / Opcion de Compra"],
+    "Concepto": ["Valor de mercado estimado al vencimiento"],
     "Valor Neto": [f"{moneda} ${vals['residual_neto']:,.2f}"],
     "I.V.A.": [f"{moneda} ${vals['residual_iva']:,.2f}"],
     "Valor Total": [f"{moneda} ${vals['residual_total']:,.2f}"]
@@ -136,22 +136,13 @@ st.markdown("**Al termino del contrato:**")
 st.dataframe(df_termino, use_container_width=True, hide_index=True)
 
 with st.expander("Vista Analitica Interna (Exclusivo FEX Capital)"):
-    
-    # --- CÁLCULO DEL IRR (TIR) ---
-    # Momento 0: Salida del equipo + Ingreso Renta 1 + Ingreso Comision + Ingreso Garantia
+    # TIR (IRR)
     flujos_efectivo = [-vals['precio_base'] + vals['renta_neta'] + vals['comision_neta'] + vals['renta_neta']]
-    
-    # Momento 1 hasta Plazo-2: Rentas mensuales ordinarias
     for _ in range(meses - 2):
         flujos_efectivo.append(vals['renta_neta'])
-        
-    # Momento Final: Cobro del valor residual (La renta ya esta cubierta)
     flujos_efectivo.append(vals['residual_neto'])
-    
-    # Calculo y Anualizacion
     tir_mensual = npf.irr(flujos_efectivo)
     tir_anual = tir_mensual * 12 * 100
-    # -----------------------------
     
     col1, col2 = st.columns(2)
     col1.info(f"Monto a Financiar (Base sin IVA): {moneda} ${vals['precio_base']:,.2f}")
@@ -181,69 +172,70 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.add_page()
     pdf.set_text_color(27, 27, 27)
     
+    # 1. INFORMACION GENERAL
     pdf.set_font("Arial", 'B', 11)
     pdf.cell(0, 8, "1. INFORMACION GENERAL", ln=True, border='B')
     pdf.set_font("Arial", '', 10)
     pdf.cell(95, 7, f"Cliente: {nombre_empresa}", 0, 0)
     pdf.cell(95, 7, f"RFC: {rfc_cliente}", 0, 1)
-    
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(15, 7, "Activo:", 0, 0)
     pdf.set_font("Arial", '', 10)
     pdf.multi_cell(0, 7, equipo_desc)
-    
     pdf.cell(0, 7, f"Valor del Activo (IVA inc): {moneda} ${precio_input:,.2f}", ln=True)
     pdf.ln(5)
 
+    # 2. A LA FIRMA
     pdf.set_fill_color(210, 210, 210) 
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(0, 7, "A la firma del contrato se pagara", 1, 1, 'C', fill=True)
-    
     pdf.set_font("Arial", 'B', 9)
-    pdf.cell(75, 7, "", 0, 0)
-    pdf.cell(38, 7, "Valor Neto", 0, 0, 'R')
-    pdf.cell(38, 7, "I.V.A.", 0, 0, 'R')
-    pdf.cell(39, 7, "Valor Total", 0, 1, 'R')
-    
+    pdf.cell(75, 7, "", 0, 0); pdf.cell(38, 7, "Valor Neto", 0, 0, 'R'); pdf.cell(38, 7, "I.V.A.", 0, 0, 'R'); pdf.cell(39, 7, "Valor Total", 0, 1, 'R')
     pdf.set_font("Arial", '', 9)
     pdf.cell(75, 6, "1era Renta Anticipada:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
     pdf.cell(75, 6, "Comision por Apertura:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['comision_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['comision_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['comision_total']:,.2f}", 0, 1, 'R')
     pdf.cell(75, 6, "Renta en Garantia:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
-    
     pdf.cell(190, 2, "", "B", 1) 
-    pdf.ln(2)
-    
-    pdf.set_font("Arial", 'B', 9)
+    pdf.ln(1); pdf.set_font("Arial", 'B', 9)
     pdf.cell(75, 6, "TOTALES :", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['pago_inicial_neto']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['pago_inicial_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['pago_inicial_total']:,.2f}", 0, 1, 'R')
     pdf.ln(5)
 
+    # 3. MENSUALIDADES
     pdf.set_fill_color(210, 210, 210)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(0, 7, "Mensualidades", 1, 1, 'C', fill=True)
-    
     pdf.set_font("Arial", 'B', 9)
-    pdf.cell(75, 7, "", 0, 0)
-    pdf.cell(38, 7, "Mensualidad", 0, 0, 'R')
-    pdf.cell(38, 7, "I.V.A.", 0, 0, 'R')
-    pdf.cell(39, 7, "Total Mensual", 0, 1, 'R')
-    
+    pdf.cell(75, 7, "", 0, 0); pdf.cell(38, 7, "Mensualidad", 0, 0, 'R'); pdf.cell(38, 7, "I.V.A.", 0, 0, 'R'); pdf.cell(39, 7, "Total Mensual", 0, 1, 'R')
     pdf.set_font("Arial", 'B', 9)
     pdf.cell(75, 6, f"{meses - 2} pagos con periodicidad Mensual.", 0, 0, 'C'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
     pdf.ln(8)
 
+    # 4. AL TERMINO
     pdf.set_fill_color(210, 210, 210)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(0, 7, "Al termino del contrato", 1, 1, 'C', fill=True)
-    
     pdf.set_font("Arial", 'B', 9)
-    pdf.cell(75, 7, "Valor Residual / Opcion de Compra:", 0, 0, 'R'); pdf.cell(38, 7, f"{vals['residual_neto']:,.2f}", 0, 0, 'R'); pdf.cell(38, 7, f"{vals['residual_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 7, f"{vals['residual_total']:,.2f}", 0, 1, 'R')
-    
-    pdf.ln(25)
+    # Cambio solicitado: Valor de mercado estimado al vencimiento
+    pdf.cell(75, 7, "Valor de mercado estimado al vencimiento:", 0, 0, 'R'); pdf.cell(38, 7, f"{vals['residual_neto']:,.2f}", 0, 0, 'R'); pdf.cell(38, 7, f"{vals['residual_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 7, f"{vals['residual_total']:,.2f}", 0, 1, 'R')
+    pdf.ln(10)
+
+    # 5. NOTAS LEGALES (PIE DE PAGINA)
+    pdf.set_font("Arial", 'I', 8)
+    pdf.cell(0, 5, "1) La renta es fija y se paga al inicio de cada periodo.", ln=True)
+    pdf.cell(0, 5, "2) Esta cotizacion requiere autorizacion del Comite de Credito.", ln=True)
+    pdf.cell(0, 5, "3) Los precios son sujetos a cambio sin previo aviso.", ln=True)
+    pdf.cell(0, 5, f"4) La moneda de esta cotizacion es: {moneda}", ln=True)
+    pdf.cell(0, 5, "5) La renta en garantia pagada al inicio, se utilizara para cubrir la ultima renta.", ln=True)
+    pdf.cell(0, 5, "6) El valor del mercado estimado no representa ningun compromiso de compra venta entre las partes.", ln=True)
+
+    # FIRMAS
+    pdf.ln(10)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(90, 10, "__________________________________", 0, 0, 'C'); pdf.cell(90, 10, "__________________________________", 0, 1, 'C')
     pdf.cell(90, 5, f"Por: {nombre_empresa}", 0, 0, 'C'); pdf.cell(90, 5, "Por: FEX CAPITAL, S.A. DE C.V.", 0, 1, 'C')
     pdf.cell(90, 5, f"{representante}", 0, 0, 'C'); pdf.cell(90, 5, "Representante Legal", 0, 1, 'C')
     
+    # Generar descarga
     pdf_output = pdf.output(dest='S').encode('latin-1')
     b64_pdf = base64.b64encode(pdf_output).decode('utf-8')
     st.markdown(f'<br><a href="data:application/pdf;base64,{b64_pdf}" download="Propuesta_FEX_{nombre_empresa}.pdf" style="padding:12px 20px; background-color:#0163FF; color:white; font-weight:bold; border-radius:4px; text-decoration:none; display:inline-block;">Descargar Propuesta PDF</a>', unsafe_allow_html=True)
