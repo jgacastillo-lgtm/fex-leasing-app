@@ -19,7 +19,8 @@ class TermSheetPDF(FPDF):
         self.set_y(38)
         self.set_font('Arial', 'B', 12)
         self.set_text_color(27, 27, 27) 
-        self.cell(0, 6, 'TERM SHEET PRELIMINAR', 0, 1, 'C')
+        # CAMBIO APLICADO AQUÍ: Nuevo título del documento
+        self.cell(0, 6, 'Cotizacion Arrendamiento Puro', 0, 1, 'C')
         fecha_hoy = datetime.now().strftime("%d/%m/%Y")
         self.set_font('Arial', '', 9)
         self.set_text_color(100, 100, 100)
@@ -167,7 +168,7 @@ with st.expander("Vista Analitica Interna (Exclusivo FEX Capital)"):
 
 # 7. Boton PDF
 st.markdown("---")
-if st.button("Generar y Descargar Term Sheet PDF"):
+if st.button("Generar y Descargar Cotizacion PDF"):
     pdf = TermSheetPDF()
     pdf.add_page()
     pdf.set_text_color(27, 27, 27)
@@ -178,10 +179,12 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.set_font("Arial", '', 10)
     pdf.cell(95, 7, f"Cliente: {nombre_empresa}", 0, 0)
     pdf.cell(95, 7, f"RFC: {rfc_cliente}", 0, 1)
+    
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(15, 7, "Activo:", 0, 0)
     pdf.set_font("Arial", '', 10)
     pdf.multi_cell(0, 7, equipo_desc)
+    
     pdf.cell(0, 7, f"Valor del Activo (IVA inc): {moneda} ${precio_input:,.2f}", ln=True)
     pdf.ln(5)
 
@@ -189,12 +192,18 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.set_fill_color(210, 210, 210) 
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(0, 7, "A la firma del contrato se pagara", 1, 1, 'C', fill=True)
+    
     pdf.set_font("Arial", 'B', 9)
-    pdf.cell(75, 7, "", 0, 0); pdf.cell(38, 7, "Valor Neto", 0, 0, 'R'); pdf.cell(38, 7, "I.V.A.", 0, 0, 'R'); pdf.cell(39, 7, "Valor Total", 0, 1, 'R')
+    pdf.cell(75, 7, "", 0, 0)
+    pdf.cell(38, 7, "Valor Neto", 0, 0, 'R')
+    pdf.cell(38, 7, "I.V.A.", 0, 0, 'R')
+    pdf.cell(39, 7, "Valor Total", 0, 1, 'R')
+    
     pdf.set_font("Arial", '', 9)
     pdf.cell(75, 6, "1era Renta Anticipada:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
     pdf.cell(75, 6, "Comision por Apertura:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['comision_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['comision_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['comision_total']:,.2f}", 0, 1, 'R')
     pdf.cell(75, 6, "Renta en Garantia:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
+    
     pdf.cell(190, 2, "", "B", 1) 
     pdf.ln(1); pdf.set_font("Arial", 'B', 9)
     pdf.cell(75, 6, "TOTALES :", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['pago_inicial_neto']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['pago_inicial_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['pago_inicial_total']:,.2f}", 0, 1, 'R')
@@ -204,8 +213,13 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.set_fill_color(210, 210, 210)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(0, 7, "Mensualidades", 1, 1, 'C', fill=True)
+    
     pdf.set_font("Arial", 'B', 9)
-    pdf.cell(75, 7, "", 0, 0); pdf.cell(38, 7, "Mensualidad", 0, 0, 'R'); pdf.cell(38, 7, "I.V.A.", 0, 0, 'R'); pdf.cell(39, 7, "Total Mensual", 0, 1, 'R')
+    pdf.cell(75, 7, "", 0, 0)
+    pdf.cell(38, 7, "Mensualidad", 0, 0, 'R')
+    pdf.cell(38, 7, "I.V.A.", 0, 0, 'R')
+    pdf.cell(39, 7, "Total Mensual", 0, 1, 'R')
+    
     pdf.set_font("Arial", 'B', 9)
     pdf.cell(75, 6, f"{meses - 2} pagos con periodicidad Mensual.", 0, 0, 'C'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
     pdf.ln(8)
@@ -214,12 +228,12 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.set_fill_color(210, 210, 210)
     pdf.set_font("Arial", 'B', 10)
     pdf.cell(0, 7, "Al termino del contrato", 1, 1, 'C', fill=True)
+    
     pdf.set_font("Arial", 'B', 9)
-    # Cambio solicitado: Valor de mercado estimado al vencimiento
     pdf.cell(75, 7, "Valor de mercado estimado al vencimiento:", 0, 0, 'R'); pdf.cell(38, 7, f"{vals['residual_neto']:,.2f}", 0, 0, 'R'); pdf.cell(38, 7, f"{vals['residual_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 7, f"{vals['residual_total']:,.2f}", 0, 1, 'R')
-    pdf.ln(10)
-
+    
     # 5. NOTAS LEGALES (PIE DE PAGINA)
+    pdf.ln(10)
     pdf.set_font("Arial", 'I', 8)
     pdf.cell(0, 5, "1) La renta es fija y se paga al inicio de cada periodo.", ln=True)
     pdf.cell(0, 5, "2) Esta cotizacion requiere autorizacion del Comite de Credito.", ln=True)
@@ -238,4 +252,4 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     # Generar descarga
     pdf_output = pdf.output(dest='S').encode('latin-1')
     b64_pdf = base64.b64encode(pdf_output).decode('utf-8')
-    st.markdown(f'<br><a href="data:application/pdf;base64,{b64_pdf}" download="Propuesta_FEX_{nombre_empresa}.pdf" style="padding:12px 20px; background-color:#0163FF; color:white; font-weight:bold; border-radius:4px; text-decoration:none; display:inline-block;">Descargar Propuesta PDF</a>', unsafe_allow_html=True)
+    st.markdown(f'<br><a href="data:application/pdf;base64,{b64_pdf}" download="Cotizacion_FEX_{nombre_empresa}.pdf" style="padding:12px 20px; background-color:#0163FF; color:white; font-weight:bold; border-radius:4px; text-decoration:none; display:inline-block;">Descargar Cotizacion PDF</a>', unsafe_allow_html=True)
