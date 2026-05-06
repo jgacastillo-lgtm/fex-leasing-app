@@ -6,57 +6,26 @@ import base64
 import os
 from datetime import datetime
 
-# 1. Configuración y Estilos
+# 1. Configuración de página
 st.set_page_config(page_title="FEX Capital - Sistema de Arrendamiento", layout="wide")
 
 LOGO_PATH = "LOGO FEX.png"
 
-m_style = """
-<style>
-    div.stButton > button:first-child {
-        background-color: #0163FF;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        font-weight: bold;
-    }
-    div.stButton > button:first-child:hover {
-        background-color: #1B1B1B;
-        color: white;
-    }
-    h1, h2, h3 {
-        color: #1B1B1B;
-        font-family: sans-serif;
-    }
-    [data-testid="stSidebar"] {
-        background-color: #f8f9fa;
-    }
-</style>
-"""
-st.markdown(m_style, unsafe_allow_html=True)
-
-# 2. Clase para PDF (Con Logo Aislado y Textos Reducidos)
+# 2. Clase para PDF 
 class TermSheetPDF(FPDF):
     def header(self):
-        # Insertar logo centrado hasta arriba
         if os.path.exists(LOGO_PATH):
             self.image(LOGO_PATH, x=80, y=10, w=50)
             
-        # Bajar el texto considerablemente para aislar el logo
         self.set_y(38)
-        
-        # Título principal con tamaño reducido
         self.set_font('Arial', 'B', 12)
-        self.set_text_color(27, 27, 27) # Negro corporativo FEX
+        self.set_text_color(27, 27, 27) 
         self.cell(0, 6, 'TERM SHEET PRELIMINAR', 0, 1, 'C')
         
-        # Fecha con tamaño reducido
         fecha_hoy = datetime.now().strftime("%d/%m/%Y")
         self.set_font('Arial', '', 9)
         self.set_text_color(100, 100, 100)
         self.cell(0, 5, f'Fecha: {fecha_hoy}', 0, 1, 'C')
-        
-        # Espacio antes de empezar las secciones de datos
         self.ln(10)
         
     def footer(self):
@@ -87,11 +56,14 @@ if os.path.exists(LOGO_PATH):
     
 st.sidebar.markdown("### Configuración de Parámetros")
 moneda = st.sidebar.selectbox("Moneda", ["MXN", "USD"])
-precio_input = st.sidebar.number_input("Precio del Equipo (IVA incluido)", min_value=1000, value=1160000)
+
+# Actualización a formato de moneda con decimales (.00)
+precio_input = st.sidebar.number_input("Precio del Equipo (IVA incluido)", min_value=1000.0, value=1160000.0, step=10000.0, format="%.2f")
+
 tasa = st.sidebar.slider("Tasa Anualizada (%)", 1.0, 100.0, 14.5, 0.5)
-meses = st.sidebar.slider("Plazo Forzoso (Meses)", 6, 72, 24, 6)
-residual = st.sidebar.slider("Valor Residual (%)", 0, 40, 0, 1)
-comision = st.sidebar.number_input("Comisión por Apertura (%)", min_value=0.0, value=2.0, step=0.5)
+meses = st.sidebar.slider("Plazo Forzoso (Meses)", 6, 72, 36, 6)
+residual = st.sidebar.slider("Valor Residual (%)", 0, 40, 10, 1)
+comision = st.sidebar.number_input("Comisión por Apertura (%)", min_value=0.0, value=3.0, step=0.5, format="%.2f")
 
 # 5. Captura Datos
 st.title("FEX CAPITAL")
@@ -134,7 +106,6 @@ for mes in range(1, meses + 1):
         "Renta Base": f"{moneda} ${r_neta:,.2f}",
         "IVA": f"{moneda} ${i_renta:,.2f}",
         "Pago Total": f"{moneda} ${p_mes:,.2f}",
-        # TEXTO REDUCIDO PARA QUE QUEPA PERFECTAMENTE EN EL PDF
         "Concepto": "1ra Renta Anticipada + Comisión" if mes == 1 else "Renta Mensual"
     })
     
@@ -164,7 +135,7 @@ with st.expander("Vista Analítica Interna (Exclusivo FEX Capital)"):
 st.markdown("---")
 if st.button("Generar y Descargar Term Sheet PDF"):
     pdf = TermSheetPDF()
-    pdf.set_auto_page_break(auto=False) # Desactivamos el automático para controlarlo nosotros
+    pdf.set_auto_page_break(auto=False)
     pdf.add_page()
     pdf.set_text_color(27, 27, 27)
     
@@ -186,34 +157,28 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.cell(90, 5, f"Por: {nombre_empresa}", 0, 0, 'C')
     pdf.cell(90, 5, "Por: FEX CAPITAL, S.A. DE C.V.", 0, 1, 'C')
     
-    # -----------------------------------------------------
-    # PAGINA 2 Y TABLA CONTROLADA
-    # -----------------------------------------------------
+    # Anexo A
     pdf.add_page()
     pdf.set_font("Arial", 'B', 12); pdf.cell(0, 10, "ANEXO A: PROYECCION DE FLUJOS", ln=True, border='B'); pdf.ln(5)
     
-    # Función para imprimir los encabezados de la tabla
     def imprimir_encabezados_tabla(pdf_obj):
         pdf_obj.set_fill_color(1, 99, 255)
         pdf_obj.set_text_color(255, 255, 255)
         pdf_obj.set_font("Arial", 'B', 8)
-        # Anchos ajustados: 15 + 40 + 35 + 40 + 60 = 190 (Ajuste perfecto para página A4)
         pdf_obj.cell(15, 7, "Mes", 1, 0, 'C', fill=True)
         pdf_obj.cell(40, 7, "Renta Base", 1, 0, 'C', fill=True)
         pdf_obj.cell(35, 7, "IVA", 1, 0, 'C', fill=True)
         pdf_obj.cell(40, 7, "Pago Total", 1, 0, 'C', fill=True)
         pdf_obj.cell(60, 7, "Concepto", 1, 1, 'C', fill=True)
-        # Regresar a formato de texto normal
         pdf_obj.set_text_color(27, 27, 27)
         pdf_obj.set_font("Arial", '', 8)
 
     imprimir_encabezados_tabla(pdf)
     
     for _, row in df_comercial.iterrows():
-        # Sensor Anti-Recortes: Si la posición en Y pasa de 265, agregamos una página nueva
         if pdf.get_y() > 265:
             pdf.add_page()
-            imprimir_encabezados_tabla(pdf) # Volvemos a imprimir los títulos azules en la nueva hoja
+            imprimir_encabezados_tabla(pdf) 
             
         pdf.cell(15, 6, str(row['Mes']), 1, 0, 'C')
         pdf.cell(40, 6, row['Renta Base'], 1, 0, 'R')
