@@ -19,7 +19,6 @@ class TermSheetPDF(FPDF):
         self.set_y(38)
         self.set_font('Arial', 'B', 12)
         self.set_text_color(27, 27, 27) 
-        # CAMBIO APLICADO AQUÍ: Nuevo título del documento
         self.cell(0, 6, 'Cotización Arrendamiento Puro', 0, 1, 'C')
         fecha_hoy = datetime.now().strftime("%d/%m/%Y")
         self.set_font('Arial', '', 9)
@@ -31,7 +30,7 @@ class TermSheetPDF(FPDF):
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
         self.set_text_color(128, 128, 128)
-        self.cell(0, 10, f'Pagina {self.page_no()}', 0, 0, 'C')
+        self.cell(0, 10, f'Página {self.page_no()}', 0, 0, 'C')
 
 # 3. Motor Financiero Desglosado
 def calcular_escenario(precio_con_iva, tasa_anual, meses, residual_porc, comision_porc):
@@ -78,36 +77,36 @@ if os.path.exists(LOGO_PATH):
     st.sidebar.markdown("<p style='text-align: center; font-weight: bold; color: #1B1B1B; margin-top: -10px;'>TU ALIADO FINANCIERO</p>", unsafe_allow_html=True)
     st.sidebar.markdown("---")
     
-st.sidebar.markdown("### Configuracion de Parametros")
+st.sidebar.markdown("### Configuración de Parámetros")
 moneda = st.sidebar.selectbox("Moneda", ["MXN", "USD"])
 precio_input = st.sidebar.number_input("Precio del Equipo (IVA incluido)", min_value=1000.0, value=307986.96, step=10000.0, format="%.2f")
 tasa = st.sidebar.slider("Tasa Anualizada (%)", 1.0, 100.0, 14.5, 0.5)
 meses = st.sidebar.slider("Plazo Forzoso (Meses)", 6, 72, 36, 6)
 residual = st.sidebar.slider("Valor Residual (%)", 0, 40, 10, 1)
-comision = st.sidebar.number_input("Comision por Apertura (%)", min_value=0.0, value=3.0, step=0.5, format="%.2f")
+comision = st.sidebar.number_input("Comisión por Apertura (%)", min_value=0.0, value=3.0, step=0.5, format="%.2f")
 
 # 5. Captura Datos
 st.title("Calculadora de Arrendamiento")
 st.markdown("---")
 
-with st.expander("Informacion Legal del Cliente", expanded=True):
+with st.expander("Información Legal del Cliente", expanded=True):
     c_c1, c_c2 = st.columns(2)
-    nombre_empresa = c_c1.text_input("Razon Social / Empresa", "MAREA ALIMENTOS")
+    nombre_empresa = c_c1.text_input("Razón Social / Empresa", "MAREA ALIMENTOS")
     rfc_cliente = c_c1.text_input("RFC", "MAL221117ANO")
     representante = c_c2.text_input("Representante Legal", "Nombre del Representante")
     
     descripcion_default = "19x Smart Store 600 Duo Mexico\n19x PAX IM30 Kit\n19x Complete Roller Set para Smart Store"
-    equipo_desc = st.text_area("Descripcion detallada del Activo", descripcion_default, height=100)
+    equipo_desc = st.text_area("Descripción detallada del Activo", descripcion_default, height=100)
 
 # Ejecucion de Calculos
 vals = calcular_escenario(precio_input, tasa, meses, residual, comision)
 
 # 6. Resumen de Condiciones (Web)
 st.markdown("<br>", unsafe_allow_html=True)
-st.markdown("### Resumen de la Operacion")
+st.markdown("### Resumen de la Operación")
 
 df_firma = pd.DataFrame({
-    "Concepto": ["1era Renta Anticipada", "Comision por Apertura", "Renta en Garantia", "TOTAL A LA FIRMA"],
+    "Concepto": ["1ra Renta Anticipada", "Comisión por Apertura", "Renta en Garantía", "TOTAL A LA FIRMA"],
     "Valor Neto": [f"{moneda} ${vals['renta_neta']:,.2f}", f"{moneda} ${vals['comision_neta']:,.2f}", f"{moneda} ${vals['renta_neta']:,.2f}", f"{moneda} ${vals['pago_inicial_neto']:,.2f}"],
     "I.V.A.": [f"{moneda} ${vals['iva_renta']:,.2f}", f"{moneda} ${vals['comision_iva']:,.2f}", f"{moneda} ${vals['iva_renta']:,.2f}", f"{moneda} ${vals['pago_inicial_iva']:,.2f}"],
     "Valor Total": [f"{moneda} ${vals['renta_total']:,.2f}", f"{moneda} ${vals['comision_total']:,.2f}", f"{moneda} ${vals['renta_total']:,.2f}", f"{moneda} ${vals['pago_inicial_total']:,.2f}"]
@@ -127,16 +126,16 @@ df_termino = pd.DataFrame({
     "Valor Total": [f"{moneda} ${vals['residual_total']:,.2f}"]
 })
 
-st.markdown("**A la firma del contrato se pagara:**")
+st.markdown("**A la firma del contrato se pagará:**")
 st.dataframe(df_firma, use_container_width=True, hide_index=True)
 
 st.markdown("**Mensualidades:**")
 st.dataframe(df_mensualidades, use_container_width=True, hide_index=True)
 
-st.markdown("**Al termino del contrato:**")
+st.markdown("**Al término del contrato:**")
 st.dataframe(df_termino, use_container_width=True, hide_index=True)
 
-with st.expander("Vista Analitica Interna (Exclusivo FEX Capital)"):
+with st.expander("Vista Analítica Interna (Exclusivo FEX Capital)"):
     # TIR (IRR)
     flujos_efectivo = [-vals['precio_base'] + vals['renta_neta'] + vals['comision_neta'] + vals['renta_neta']]
     for _ in range(meses - 2):
@@ -147,7 +146,7 @@ with st.expander("Vista Analitica Interna (Exclusivo FEX Capital)"):
     
     col1, col2 = st.columns(2)
     col1.info(f"Monto a Financiar (Base sin IVA): {moneda} ${vals['precio_base']:,.2f}")
-    col2.success(f"TIR Anualizada (IRR) de la Operacion: {tir_anual:.2f}%")
+    col2.success(f"TIR Anualizada (IRR) de la Operación: {tir_anual:.2f}%")
     
     datos_internos = []
     saldo_insoluto = vals['precio_base']
@@ -158,24 +157,24 @@ with st.expander("Vista Analitica Interna (Exclusivo FEX Capital)"):
         datos_internos.append({
             "Mes": mes,
             "Renta (sin IVA)": vals['renta_neta'],
-            "Interes": interes_mes,
-            "Amortizacion Capital": capital_mes,
+            "Interés": interes_mes,
+            "Amortización Capital": capital_mes,
             "Saldo Insoluto": max(saldo_insoluto, 0)
         })
     st.dataframe(pd.DataFrame(datos_internos).style.format({
-        "Renta (sin IVA)": "{:,.2f}", "Interes": "{:,.2f}", "Amortizacion Capital": "{:,.2f}", "Saldo Insoluto": "{:,.2f}"
+        "Renta (sin IVA)": "{:,.2f}", "Interés": "{:,.2f}", "Amortización Capital": "{:,.2f}", "Saldo Insoluto": "{:,.2f}"
     }), use_container_width=True)
 
 # 7. Boton PDF
 st.markdown("---")
-if st.button("Generar y Descargar Cotizacion PDF"):
+if st.button("Generar y Descargar Cotización PDF"):
     pdf = TermSheetPDF()
     pdf.add_page()
     pdf.set_text_color(27, 27, 27)
     
     # 1. INFORMACION GENERAL
     pdf.set_font("Arial", 'B', 11)
-    pdf.cell(0, 8, "1. INFORMACION GENERAL", ln=True, border='B')
+    pdf.cell(0, 8, "1. INFORMACIÓN GENERAL", ln=True, border='B')
     pdf.set_font("Arial", '', 10)
     pdf.cell(95, 7, f"Cliente: {nombre_empresa}", 0, 0)
     pdf.cell(95, 7, f"RFC: {rfc_cliente}", 0, 1)
@@ -191,7 +190,7 @@ if st.button("Generar y Descargar Cotizacion PDF"):
     # 2. A LA FIRMA
     pdf.set_fill_color(210, 210, 210) 
     pdf.set_font("Arial", 'B', 10)
-    pdf.cell(0, 7, "A la firma del contrato se pagara", 1, 1, 'C', fill=True)
+    pdf.cell(0, 7, "A la firma del contrato se pagará", 1, 1, 'C', fill=True)
     
     pdf.set_font("Arial", 'B', 9)
     pdf.cell(75, 7, "", 0, 0)
@@ -200,9 +199,9 @@ if st.button("Generar y Descargar Cotizacion PDF"):
     pdf.cell(39, 7, "Valor Total", 0, 1, 'R')
     
     pdf.set_font("Arial", '', 9)
-    pdf.cell(75, 6, "1era Renta Anticipada:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
-    pdf.cell(75, 6, "Comision por Apertura:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['comision_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['comision_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['comision_total']:,.2f}", 0, 1, 'R')
-    pdf.cell(75, 6, "Renta en Garantia:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
+    pdf.cell(75, 6, "1ra Renta Anticipada:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
+    pdf.cell(75, 6, "Comisión por Apertura:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['comision_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['comision_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['comision_total']:,.2f}", 0, 1, 'R')
+    pdf.cell(75, 6, "Renta en Garantía:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
     
     pdf.cell(190, 2, "", "B", 1) 
     pdf.ln(1); pdf.set_font("Arial", 'B', 9)
@@ -227,7 +226,7 @@ if st.button("Generar y Descargar Cotizacion PDF"):
     # 4. AL TERMINO
     pdf.set_fill_color(210, 210, 210)
     pdf.set_font("Arial", 'B', 10)
-    pdf.cell(0, 7, "Al termino del contrato", 1, 1, 'C', fill=True)
+    pdf.cell(0, 7, "Al término del contrato", 1, 1, 'C', fill=True)
     
     pdf.set_font("Arial", 'B', 9)
     pdf.cell(75, 7, "Valor de mercado estimado al vencimiento:", 0, 0, 'R'); pdf.cell(38, 7, f"{vals['residual_neto']:,.2f}", 0, 0, 'R'); pdf.cell(38, 7, f"{vals['residual_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 7, f"{vals['residual_total']:,.2f}", 0, 1, 'R')
@@ -236,11 +235,11 @@ if st.button("Generar y Descargar Cotizacion PDF"):
     pdf.ln(10)
     pdf.set_font("Arial", 'I', 8)
     pdf.cell(0, 5, "1) La renta es fija y se paga al inicio de cada periodo.", ln=True)
-    pdf.cell(0, 5, "2) Esta cotizacion requiere autorizacion del Comite de Credito.", ln=True)
-    pdf.cell(0, 5, "3) Los precios son sujetos a cambio sin previo aviso.", ln=True)
-    pdf.cell(0, 5, f"4) La moneda de esta cotizacion es: {moneda}", ln=True)
-    pdf.cell(0, 5, "5) La renta en garantia pagada al inicio, se utilizara para cubrir la ultima renta.", ln=True)
-    pdf.cell(0, 5, "6) El valor del mercado estimado no representa ningun compromiso de compra venta entre las partes.", ln=True)
+    pdf.cell(0, 5, "2) Esta cotización requiere autorización del Comité de Crédito.", ln=True)
+    pdf.cell(0, 5, "3) Los precios están sujetos a cambio sin previo aviso.", ln=True)
+    pdf.cell(0, 5, f"4) La moneda de esta cotización es: {moneda}", ln=True)
+    pdf.cell(0, 5, "5) La renta en garantía pagada al inicio, se utilizará para cubrir la última renta.", ln=True)
+    pdf.cell(0, 5, "6) El valor de mercado estimado no representa ningún compromiso de compraventa entre las partes.", ln=True)
 
     # FIRMAS
     pdf.ln(10)
@@ -252,4 +251,4 @@ if st.button("Generar y Descargar Cotizacion PDF"):
     # Generar descarga
     pdf_output = pdf.output(dest='S').encode('latin-1')
     b64_pdf = base64.b64encode(pdf_output).decode('utf-8')
-    st.markdown(f'<br><a href="data:application/pdf;base64,{b64_pdf}" download="Cotizacion_FEX_{nombre_empresa}.pdf" style="padding:12px 20px; background-color:#0163FF; color:white; font-weight:bold; border-radius:4px; text-decoration:none; display:inline-block;">Descargar Cotizacion PDF</a>', unsafe_allow_html=True)
+    st.markdown(f'<br><a href="data:application/pdf;base64,{b64_pdf}" download="Cotizacion_FEX_{nombre_empresa}.pdf" style="padding:12px 20px; background-color:#0163FF; color:white; font-weight:bold; border-radius:4px; text-decoration:none; display:inline-block;">Descargar Cotización PDF</a>', unsafe_allow_html=True)
