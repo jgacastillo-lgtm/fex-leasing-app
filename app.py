@@ -3,14 +3,13 @@ import numpy_financial as npf
 import pandas as pd
 from fpdf import FPDF
 import base64
+import os
 
-# 1. Configuración y Estilos de FEX CAPITAL
+# 1. Configuración y Estilos
 st.set_page_config(page_title="FEX Capital - Sistema de Arrendamiento", layout="wide")
 
-# Inyección de CSS para aplicar los colores de la marca FEX (#0163FF y #1B1B1B)
 m_style = """
 <style>
-    /* Color de botones primarios */
     div.stButton > button:first-child {
         background-color: #0163FF;
         color: white;
@@ -22,12 +21,10 @@ m_style = """
         background-color: #1B1B1B;
         color: white;
     }
-    /* Estilos de cabecera */
     h1, h2, h3 {
         color: #1B1B1B;
         font-family: sans-serif;
     }
-    /* Color de acento para la barra lateral */
     [data-testid="stSidebar"] {
         background-color: #f8f9fa;
     }
@@ -35,23 +32,28 @@ m_style = """
 """
 st.markdown(m_style, unsafe_allow_html=True)
 
-# 2. Clase para PDF (Membrete con colores exactos FEX)
+# 2. Clase para PDF (Con Logo y Nueva Razón Social)
 class TermSheetPDF(FPDF):
     def header(self):
+        # Insertar logo si existe en el repositorio (x, y, ancho)
+        if os.path.exists("logo.png"):
+            self.image("logo.png", 10, 8, 40)
+            
         self.set_font('Arial', 'B', 15)
         self.cell(0, 10, 'TERM SHEET PRELIMINAR', 0, 1, 'C')
         self.set_font('Arial', 'B', 11)
-        # RGB exacto para el HEX #0163FF
         self.set_text_color(1, 99, 255)
-        self.cell(0, 10, 'FEX CAPITAL LOANS, S.A. DE C.V., SOFOM, E.N.R.', 0, 1, 'C')
-        self.ln(5)
+        # Nueva Razón Social
+        self.cell(0, 10, 'FEX CAPITAL, S.A. DE C.V.', 0, 1, 'C')
+        self.ln(10)
+        
     def footer(self):
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
         self.set_text_color(128, 128, 128)
         self.cell(0, 10, f'Página {self.page_no()}', 0, 0, 'C')
 
-# 3. Motor Financiero con Desglose de IVA
+# 3. Motor Financiero
 def calcular_escenario(precio_con_iva, tasa_anual, meses, residual_porc, comision_porc):
     precio_base = precio_con_iva / 1.16
     tasa_mensual = (tasa_anual / 100) / 12
@@ -66,7 +68,11 @@ def calcular_escenario(precio_con_iva, tasa_anual, meses, residual_porc, comisio
     
     return precio_base, renta_neta, iva_renta, renta_total, monto_comision, pago_inicial, monto_residual, tasa_mensual
 
-# 4. Interfaz Lateral
+# 4. Interfaz Lateral (Con Logo)
+if os.path.exists("logo.png"):
+    st.sidebar.image("logo.png", use_column_width=True)
+    st.sidebar.markdown("---")
+    
 st.sidebar.markdown("### Configuración de Parámetros")
 moneda = st.sidebar.selectbox("Moneda", ["MXN", "USD"])
 precio_input = st.sidebar.number_input("Precio del Equipo (IVA incluido)", min_value=1000, value=1160000)
@@ -76,7 +82,7 @@ residual = st.sidebar.slider("Valor Residual (%)", 0, 40, 0, 1)
 comision = st.sidebar.number_input("Comisión por Apertura (%)", min_value=0.0, value=2.0, step=0.5)
 
 # 5. Captura Datos
-st.title("FEX CAPITAL LOANS")
+st.title("FEX CAPITAL")
 st.markdown("#### TU ALIADO FINANCIERO")
 st.markdown("---")
 
@@ -146,7 +152,7 @@ st.markdown("---")
 if st.button("Generar y Descargar Term Sheet PDF"):
     pdf = TermSheetPDF()
     pdf.add_page()
-    pdf.set_text_color(27, 27, 27) # Negro corporativo #1B1B1B
+    pdf.set_text_color(27, 27, 27)
     
     pdf.set_font("Arial", 'B', 12); pdf.cell(0, 10, "1. DATOS DEL CLIENTE", ln=True, border='B')
     pdf.set_font("Arial", '', 10); pdf.cell(0, 8, f"Razón Social: {nombre_empresa}", ln=True); pdf.cell(0, 8, f"RFC: {rfc_cliente}", ln=True)
@@ -155,7 +161,6 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.cell(0, 8, f"Valor Total del Equipo (IVA incluido): {moneda} ${precio_input:,.2f}", ln=True)
     pdf.ln(5)
     
-    # Caja de totales con fondo azul muy tenue
     pdf.set_fill_color(240, 245, 255) 
     pdf.set_font("Arial", 'B', 11)
     pdf.cell(0, 10, f"DESEMBOLSO INICIAL REQUERIDO: {moneda} ${p_inicial:,.2f}", ln=True, fill=True, align='C')
@@ -164,19 +169,20 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     
     pdf.ln(15); pdf.set_font("Arial", 'B', 10)
     pdf.cell(90, 10, "__________________________________", 0, 0, 'C'); pdf.cell(90, 10, "__________________________________", 0, 1, 'C')
-    pdf.cell(90, 5, f"Por: {nombre_empresa}", 0, 0, 'C'); pdf.cell(90, 5, "Por: FEX CAPITAL LOANS", 0, 1, 'C')
+    pdf.cell(90, 5, f"Por: {nombre_empresa}", 0, 0, 'C')
+    
+    # Firma con la Nueva Razón Social
+    pdf.cell(90, 5, "Por: FEX CAPITAL, S.A. DE C.V.", 0, 1, 'C')
     
     pdf.add_page()
     pdf.set_font("Arial", 'B', 12); pdf.cell(0, 10, "ANEXO A: PROYECCION DE FLUJOS", ln=True, border='B'); pdf.ln(5)
     
-    # Encabezados de tabla en azul institucional
     pdf.set_fill_color(1, 99, 255)
     pdf.set_text_color(255, 255, 255)
     pdf.set_font("Arial", 'B', 8)
     for c in ["Mes", "Renta Base", "IVA", "Pago Total", "Concepto"]: pdf.cell(38 if c != "Mes" else 15, 7, c, 1, 0, 'C', fill=True)
     pdf.ln()
     
-    # Filas de tabla
     pdf.set_text_color(27, 27, 27)
     pdf.set_font("Arial", '', 8)
     for _, row in df_comercial.iterrows():
