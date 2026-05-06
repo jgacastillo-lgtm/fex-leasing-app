@@ -4,11 +4,11 @@ import pandas as pd
 from fpdf import FPDF
 import base64
 import os
+from datetime import datetime
 
 # 1. Configuración y Estilos
 st.set_page_config(page_title="FEX Capital - Sistema de Arrendamiento", layout="wide")
 
-# Validamos el nombre exacto de tu archivo de logo
 LOGO_PATH = "LOGO FEX.png"
 
 m_style = """
@@ -35,19 +35,28 @@ m_style = """
 """
 st.markdown(m_style, unsafe_allow_html=True)
 
-# 2. Clase para PDF (Con Logo y Nueva Razón Social)
+# 2. Clase para PDF (Con Logo Centrado y Fecha)
 class TermSheetPDF(FPDF):
     def header(self):
-        # Insertar logo si existe en el repositorio con el nombre exacto
+        # Insertar logo centrado (Ancho hoja 210mm - Ancho logo 50 = 160 / 2 = Posición X 80)
         if os.path.exists(LOGO_PATH):
-            self.image(LOGO_PATH, 10, 8, 40)
+            self.image(LOGO_PATH, x=80, y=8, w=50)
             
+        # Bajar el texto para que no se encime con el logo
+        self.set_y(28)
+        
+        # Título
         self.set_font('Arial', 'B', 15)
+        self.set_text_color(27, 27, 27) # Negro corporativo FEX
         self.cell(0, 10, 'TERM SHEET PRELIMINAR', 0, 1, 'C')
-        self.set_font('Arial', 'B', 11)
-        self.set_text_color(1, 99, 255)
-        self.cell(0, 10, 'FEX CAPITAL, S.A. DE C.V.', 0, 1, 'C')
-        self.ln(10)
+        
+        # Fecha en formato DD/MM/YYYY
+        fecha_hoy = datetime.now().strftime("%d/%m/%Y")
+        self.set_font('Arial', '', 10)
+        self.set_text_color(100, 100, 100)
+        self.cell(0, 5, f'Fecha: {fecha_hoy}', 0, 1, 'C')
+        
+        self.ln(8)
         
     def footer(self):
         self.set_y(-15)
@@ -70,7 +79,7 @@ def calcular_escenario(precio_con_iva, tasa_anual, meses, residual_porc, comisio
     
     return precio_base, renta_neta, iva_renta, renta_total, monto_comision, pago_inicial, monto_residual, tasa_mensual
 
-# 4. Interfaz Lateral (Con Logo)
+# 4. Interfaz Lateral
 if os.path.exists(LOGO_PATH):
     st.sidebar.image(LOGO_PATH, use_container_width=True)
     st.sidebar.markdown("---")
@@ -172,7 +181,6 @@ if st.button("Generar y Descargar Term Sheet PDF"):
     pdf.ln(15); pdf.set_font("Arial", 'B', 10)
     pdf.cell(90, 10, "__________________________________", 0, 0, 'C'); pdf.cell(90, 10, "__________________________________", 0, 1, 'C')
     pdf.cell(90, 5, f"Por: {nombre_empresa}", 0, 0, 'C')
-    
     pdf.cell(90, 5, "Por: FEX CAPITAL, S.A. DE C.V.", 0, 1, 'C')
     
     pdf.add_page()
