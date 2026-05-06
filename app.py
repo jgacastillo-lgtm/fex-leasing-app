@@ -20,7 +20,7 @@ class TermSheetPDF(FPDF):
         self.set_font('Arial', 'B', 12)
         self.set_text_color(27, 27, 27) 
         # CAMBIO APLICADO AQUÍ: Nuevo título del documento
-        self.cell(0, 6, 'Cotizacion Arrendamiento Puro', 0, 1, 'C')
+        self.cell(0, 6, 'Cotización Arrendamiento Puro', 0, 1, 'C')
         fecha_hoy = datetime.now().strftime("%d/%m/%Y")
         self.set_font('Arial', '', 9)
         self.set_text_color(100, 100, 100)
