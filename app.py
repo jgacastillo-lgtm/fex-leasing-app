@@ -15,7 +15,8 @@ LOGO_PATH = "LOGO FEX.png"
 class TermSheetPDF(FPDF):
     def header(self):
         if os.path.exists(LOGO_PATH):
-            self.image(LOGO_PATH, x=80, y=10, w=50)
+            # Se ajustó x=10 para alinear el logo a la izquierda
+            self.image(LOGO_PATH, x=10, y=10, w=50)
         self.set_y(38)
         self.set_font('Arial', 'B', 12)
         self.set_text_color(27, 27, 27) 
@@ -136,7 +137,6 @@ st.markdown("**Al término del contrato:**")
 st.dataframe(df_termino, use_container_width=True, hide_index=True)
 
 with st.expander("Vista Analítica Interna (Exclusivo FEX Capital)"):
-    # TIR (IRR)
     flujos_efectivo = [-vals['precio_base'] + vals['renta_neta'] + vals['comision_neta'] + vals['renta_neta']]
     for _ in range(meses - 2):
         flujos_efectivo.append(vals['renta_neta'])
