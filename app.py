@@ -24,7 +24,7 @@ st.sidebar.image("https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=50
 st.sidebar.header("⚙️ Parámetros del Arrendamiento")
 moneda = st.sidebar.selectbox("Moneda", ["MXN", "USD"])
 precio = st.sidebar.number_input("Precio del Equipo", min_value=10000, value=1000000, step=10000)
-tasa = st.sidebar.slider("Tasa Anualizada (%)", 1.0, 50.0, 14.5, 0.5)
+tasa = st.sidebar.slider("Tasa Anualizada (%)", 1.0, 100.0, 14.5, 0.5)
 meses = st.sidebar.slider("Plazo (Meses)", 6, 72, 36, 6)
 residual = st.sidebar.slider("Valor Residual (%)", 0, 50, 20, 1)
 comision = st.sidebar.number_input("Comisión por Apertura (%)", min_value=0.0, value=2.0, step=0.5)
