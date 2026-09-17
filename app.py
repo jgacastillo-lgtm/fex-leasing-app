@@ -191,17 +191,30 @@ if st.button("Generar y Descargar Cotización PDF"):
     
     # 1. INFORMACION GENERAL
     pdf.set_font("Arial", 'B', 11)
-    pdf.cell(0, 8, "1. INFORMACIÓN GENERAL", ln=True, border='B')
+    # Cambio en la forma de aplicar el borde inferior para evitar incompatibilidades
+    pdf.cell(0, 8, "1. INFORMACIÓN GENERAL", 'B', 1) 
     pdf.set_font("Arial", '', 10)
     pdf.cell(95, 7, f"Cliente: {nombre_empresa}", 0, 0)
     pdf.cell(95, 7, f"RFC: {rfc_cliente}", 0, 1)
     
+    # =========================================================
+    # SOLUCIÓN DE ANCLAJE PARA LA DESCRIPCIÓN Y EL VALOR
+    # =========================================================
+    current_y = pdf.get_y()
     pdf.set_font("Arial", 'B', 10)
-    pdf.cell(15, 7, "Activo:", 0, 0)
+    pdf.cell(15, 5, "Activo:", 0, 0)
     pdf.set_font("Arial", '', 10)
-    pdf.multi_cell(0, 7, equipo_desc)
     
-    pdf.cell(0, 7, f"Valor del Activo (IVA inc): {moneda} ${precio_input:,.2f}", ln=True)
+    # Alineamos el texto dinámico a la derecha de "Activo:"
+    pdf.set_xy(25, current_y)
+    pdf.multi_cell(0, 5, equipo_desc)
+    
+    # Le decimos al PDF que obtenga la coordenada Y exacta en la que terminó el texto, 
+    # forzando un margen hacia abajo antes de imprimir el valor. ¡Esto evita que se desacomode!
+    pdf.set_y(pdf.get_y() + 2) 
+    
+    pdf.set_font("Arial", 'B', 10)
+    pdf.cell(0, 6, f"Valor del Activo (IVA inc): {moneda} ${precio_input:,.2f}", 0, 1)
     pdf.ln(5)
 
     # 2. A LA FIRMA
@@ -254,12 +267,12 @@ if st.button("Generar y Descargar Cotización PDF"):
     # 5. NOTAS LEGALES (PIE DE PAGINA)
     pdf.ln(10)
     pdf.set_font("Arial", 'I', 8)
-    pdf.cell(0, 5, "1) La renta es fija y se paga al inicio de cada periodo.", ln=True)
-    pdf.cell(0, 5, "2) Esta cotización requiere autorización del Comité de Crédito.", ln=True)
-    pdf.cell(0, 5, "3) Los precios están sujetos a cambio sin previo aviso.", ln=True)
-    pdf.cell(0, 5, f"4) La moneda de esta cotización es: {moneda}", ln=True)
-    pdf.cell(0, 5, "5) La renta en garantía pagada al inicio, se utilizará para cubrir la última renta.", ln=True)
-    pdf.cell(0, 5, "6) El valor de mercado estimado no representa ningún compromiso de compraventa entre las partes.", ln=True)
+    pdf.cell(0, 5, "1) La renta es fija y se paga al inicio de cada periodo.", 0, 1)
+    pdf.cell(0, 5, "2) Esta cotización requiere autorización del Comité de Crédito.", 0, 1)
+    pdf.cell(0, 5, "3) Los precios están sujetos a cambio sin previo aviso.", 0, 1)
+    pdf.cell(0, 5, f"4) La moneda de esta cotización es: {moneda}", 0, 1)
+    pdf.cell(0, 5, "5) La renta en garantía pagada al inicio, se utilizará para cubrir la última renta.", 0, 1)
+    pdf.cell(0, 5, "6) El valor de mercado estimado no representa ningún compromiso de compraventa entre las partes.", 0, 1)
 
     # FIRMAS
     pdf.ln(10)
