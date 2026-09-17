@@ -153,7 +153,6 @@ st.markdown("**Al término del contrato:**")
 st.dataframe(df_termino, use_container_width=True, hide_index=True)
 
 with st.expander("Vista Analítica Interna (Exclusivo FEX Capital)"):
-    # Flujo de efectivo considerando el desembolso neto de FEX Capital
     flujos_efectivo = [-vals['precio_base'] + vals['anticipo_neto'] + vals['renta_neta'] + vals['comision_neta'] + vals['renta_neta']]
     for _ in range(meses - 2):
         flujos_efectivo.append(vals['renta_neta'])
@@ -269,7 +268,11 @@ if st.button("Generar y Descargar Cotización PDF"):
     pdf.cell(90, 5, f"Por: {nombre_empresa}", 0, 0, 'C'); pdf.cell(90, 5, "Por: FEX CAPITAL, S.A. DE C.V.", 0, 1, 'C')
     pdf.cell(90, 5, f"{representante}", 0, 0, 'C'); pdf.cell(90, 5, "Representante Legal", 0, 1, 'C')
     
-    # Generar descarga
-    pdf_output = pdf.output(dest='S').encode('latin-1')
-    b64_pdf = base64.b64encode(pdf_output).decode('utf-8')
+    # Generar descarga (Compatible con cualquier versión de fpdf)
+    try:
+        pdf_bytes = bytes(pdf.output())
+    except TypeError:
+        pdf_bytes = pdf.output(dest='S').encode('latin-1')
+        
+    b64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
     st.markdown(f'<br><a href="data:application/pdf;base64,{b64_pdf}" download="Cotizacion_FEX_{nombre_empresa}.pdf" style="padding:12px 20px; background-color:#0163FF; color:white; font-weight:bold; border-radius:4px; text-decoration:none; display:inline-block;">Descargar Cotización PDF</a>', unsafe_allow_html=True)
