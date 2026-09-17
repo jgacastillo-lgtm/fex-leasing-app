@@ -34,29 +34,44 @@ class TermSheetPDF(FPDF):
         self.cell(0, 10, f'Página {self.page_no()}', 0, 0, 'C')
 
 # 3. Motor Financiero Desglosado
-def calcular_escenario(precio_con_iva, tasa_anual, meses, residual_porc, comision_porc):
+def calcular_escenario(precio_con_iva, tasa_anual, meses, residual_porc, comision_porc, anticipo_porc):
     precio_base = precio_con_iva / 1.16
     tasa_mensual = (tasa_anual / 100) / 12
     
-    monto_residual = precio_base * (residual_porc / 100)
-    renta_neta = abs(npf.pmt(tasa_mensual, meses, precio_base, -monto_residual, when=1))
-    iva_renta = renta_neta * 0.16
-    renta_total = renta_neta + iva_renta
-    
+    # Cálculos sobre el precio base total
     comision_neta = precio_base * (comision_porc / 100)
     comision_iva = comision_neta * 0.16
     comision_total = comision_neta + comision_iva
     
-    pago_inicial_neto = renta_neta + comision_neta + renta_neta
-    pago_inicial_iva = iva_renta + comision_iva + iva_renta
-    pago_inicial_total = renta_total + comision_total + renta_total
-    
+    monto_residual = precio_base * (residual_porc / 100)
     residual_neto = monto_residual
     residual_iva = residual_neto * 0.16
     residual_total = residual_neto + residual_iva
+
+    # Cálculo del Anticipo
+    anticipo_neto = precio_base * (anticipo_porc / 100)
+    anticipo_iva = anticipo_neto * 0.16
+    anticipo_total = anticipo_neto + anticipo_iva
+    
+    # Capital real a financiar
+    capital_financiado = precio_base - anticipo_neto
+    
+    # Cálculo de rentas sobre el capital financiado
+    renta_neta = abs(npf.pmt(tasa_mensual, meses, capital_financiado, -monto_residual, when=1))
+    iva_renta = renta_neta * 0.16
+    renta_total = renta_neta + iva_renta
+    
+    # Totales a la firma
+    pago_inicial_neto = anticipo_neto + renta_neta + comision_neta + renta_neta
+    pago_inicial_iva = anticipo_iva + iva_renta + comision_iva + iva_renta
+    pago_inicial_total = anticipo_total + renta_total + comision_total + renta_total
     
     return {
         "precio_base": precio_base,
+        "capital_financiado": capital_financiado,
+        "anticipo_neto": anticipo_neto,
+        "anticipo_iva": anticipo_iva,
+        "anticipo_total": anticipo_total,
         "tasa_mensual": tasa_mensual,
         "renta_neta": renta_neta,
         "iva_renta": iva_renta,
@@ -83,6 +98,7 @@ moneda = st.sidebar.selectbox("Moneda", ["MXN", "USD"])
 precio_input = st.sidebar.number_input("Precio del Equipo (IVA incluido)", min_value=1000.0, value=307986.96, step=10000.0, format="%.2f")
 tasa = st.sidebar.slider("Tasa Anualizada (%)", 1.0, 100.0, 14.5, 0.5)
 meses = st.sidebar.slider("Plazo Forzoso (Meses)", 6, 72, 36, 6)
+anticipo = st.sidebar.slider("Anticipo / Renta Extraordinaria (%)", 0.0, 50.0, 0.0, 1.0)
 residual = st.sidebar.slider("Valor Residual (%)", 0, 40, 10, 1)
 comision = st.sidebar.number_input("Comisión por Apertura (%)", min_value=0.0, value=3.0, step=0.5, format="%.2f")
 
@@ -100,17 +116,17 @@ with st.expander("Información Legal del Cliente", expanded=True):
     equipo_desc = st.text_area("Descripción detallada del Activo", descripcion_default, height=100)
 
 # Ejecucion de Calculos
-vals = calcular_escenario(precio_input, tasa, meses, residual, comision)
+vals = calcular_escenario(precio_input, tasa, meses, residual, comision, anticipo)
 
 # 6. Resumen de Condiciones (Web)
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("### Resumen de la Operación")
 
 df_firma = pd.DataFrame({
-    "Concepto": ["1ra Renta Anticipada", "Comisión por Apertura", "Renta en Garantía", "TOTAL A LA FIRMA"],
-    "Valor Neto": [f"{moneda} ${vals['renta_neta']:,.2f}", f"{moneda} ${vals['comision_neta']:,.2f}", f"{moneda} ${vals['renta_neta']:,.2f}", f"{moneda} ${vals['pago_inicial_neto']:,.2f}"],
-    "I.V.A.": [f"{moneda} ${vals['iva_renta']:,.2f}", f"{moneda} ${vals['comision_iva']:,.2f}", f"{moneda} ${vals['iva_renta']:,.2f}", f"{moneda} ${vals['pago_inicial_iva']:,.2f}"],
-    "Valor Total": [f"{moneda} ${vals['renta_total']:,.2f}", f"{moneda} ${vals['comision_total']:,.2f}", f"{moneda} ${vals['renta_total']:,.2f}", f"{moneda} ${vals['pago_inicial_total']:,.2f}"]
+    "Concepto": ["Anticipo (Renta Extraordinaria)", "1ra Renta Anticipada", "Comisión por Apertura", "Renta en Garantía", "TOTAL A LA FIRMA"],
+    "Valor Neto": [f"{moneda} ${vals['anticipo_neto']:,.2f}", f"{moneda} ${vals['renta_neta']:,.2f}", f"{moneda} ${vals['comision_neta']:,.2f}", f"{moneda} ${vals['renta_neta']:,.2f}", f"{moneda} ${vals['pago_inicial_neto']:,.2f}"],
+    "I.V.A.": [f"{moneda} ${vals['anticipo_iva']:,.2f}", f"{moneda} ${vals['iva_renta']:,.2f}", f"{moneda} ${vals['comision_iva']:,.2f}", f"{moneda} ${vals['iva_renta']:,.2f}", f"{moneda} ${vals['pago_inicial_iva']:,.2f}"],
+    "Valor Total": [f"{moneda} ${vals['anticipo_total']:,.2f}", f"{moneda} ${vals['renta_total']:,.2f}", f"{moneda} ${vals['comision_total']:,.2f}", f"{moneda} ${vals['renta_total']:,.2f}", f"{moneda} ${vals['pago_inicial_total']:,.2f}"]
 })
 
 df_mensualidades = pd.DataFrame({
@@ -137,19 +153,21 @@ st.markdown("**Al término del contrato:**")
 st.dataframe(df_termino, use_container_width=True, hide_index=True)
 
 with st.expander("Vista Analítica Interna (Exclusivo FEX Capital)"):
-    flujos_efectivo = [-vals['precio_base'] + vals['renta_neta'] + vals['comision_neta'] + vals['renta_neta']]
+    # Flujo de efectivo considerando el desembolso neto de FEX Capital
+    flujos_efectivo = [-vals['precio_base'] + vals['anticipo_neto'] + vals['renta_neta'] + vals['comision_neta'] + vals['renta_neta']]
     for _ in range(meses - 2):
         flujos_efectivo.append(vals['renta_neta'])
     flujos_efectivo.append(vals['residual_neto'])
+    
     tir_mensual = npf.irr(flujos_efectivo)
     tir_anual = tir_mensual * 12 * 100
     
     col1, col2 = st.columns(2)
-    col1.info(f"Monto a Financiar (Base sin IVA): {moneda} ${vals['precio_base']:,.2f}")
+    col1.info(f"Capital Real Financiado (Base sin IVA): {moneda} ${vals['capital_financiado']:,.2f}")
     col2.success(f"TIR Anualizada (IRR) de la Operación: {tir_anual:.2f}%")
     
     datos_internos = []
-    saldo_insoluto = vals['precio_base']
+    saldo_insoluto = vals['capital_financiado']
     for mes in range(1, meses + 1):
         interes_mes = 0 if mes == 1 else saldo_insoluto * vals['tasa_mensual']
         capital_mes = vals['renta_neta'] - interes_mes
@@ -199,6 +217,9 @@ if st.button("Generar y Descargar Cotización PDF"):
     pdf.cell(39, 7, "Valor Total", 0, 1, 'R')
     
     pdf.set_font("Arial", '', 9)
+    if anticipo > 0:
+        pdf.cell(75, 6, "Anticipo (Renta Extraordinaria):", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['anticipo_neto']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['anticipo_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['anticipo_total']:,.2f}", 0, 1, 'R')
+    
     pdf.cell(75, 6, "1ra Renta Anticipada:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
     pdf.cell(75, 6, "Comisión por Apertura:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['comision_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['comision_iva']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['comision_total']:,.2f}", 0, 1, 'R')
     pdf.cell(75, 6, "Renta en Garantía:", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['renta_neta']:,.2f}", 0, 0, 'R'); pdf.cell(38, 6, f"{vals['iva_renta']:,.2f}", 0, 0, 'R'); pdf.cell(39, 6, f"{vals['renta_total']:,.2f}", 0, 1, 'R')
